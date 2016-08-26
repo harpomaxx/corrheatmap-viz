@@ -8,7 +8,7 @@
 library(shiny)
 library(d3heatmap)
 shinyUI(fluidPage(
-
+ 
   # Application title
   titlePanel("Heatmap Correlation Matrix"),
 
@@ -23,11 +23,15 @@ shinyUI(fluidPage(
 
     
     sliderInput('corrvalue',label = h5("Select the correlation cutoff"),
-                  min = 1, max = 100,value=90)
+                  min = 1, max = 100,value=90),
+    
+    textInput('regfilter', label = h5("Select Features to remove. Use regex like feature1|feature2|feature3"),value = NULL)
     ),
+    
+    
     # Show a plot of the generated distribution
     mainPanel(
-      h3(textOutput("heatmaptitle")),
+      h5(htmlOutput("heatmaptitle")),
       d3heatmapOutput("heatmap")
     )
   )
