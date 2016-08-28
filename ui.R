@@ -15,13 +15,11 @@ shinyUI(fluidPage(
 
   sidebarLayout(
     sidebarPanel(
-      
-      fileInput('file1', 'Choose CSV File (compressed files supported)',
+      uiOutput("selectdataset"),
+      fileInput('file1', ' Or upload a new CSV File (compressed files supported)',
                 accept=c('text/csv', 
                          'text/comma-separated-values,text/plain', 
                          '.csv')),
-      
-
     
     sliderInput('corrvalue',label = h5("Select the correlation cutoff"),
                   min = 1, max = 100,value=90),

@@ -5,19 +5,24 @@ library(d3heatmap)
 library(caret)
 data("airquality")
 
-options(shiny.maxRequestSize = 30 * 1024 ^ 2)
+data_dir="data/"
+options(shiny.maxRequestSize = 60 * 1024 ^ 2)
+dataset_list=as.list(list.files(data_dir))
 shinyServer(function(input, output) {
 
-  # Load a CSV file or a default dataset
-  get_data <- reactive({
-    if (is.null(input$file1))
-      data = airquality
-    else {
-      data = read.csv(input$file1$datapath)
+  # Load a new CSV, save it locally and append it to dataset_list
+  datachoices <-reactive({
+    if (is.null(input$file1)==FALSE){
+      new_data = read.csv(input$file1$datapath)
+      write.csv(new_data, file=paste(data_dir,input$file1$name,sep=""),sep = ',')
+      dataset_list=c(dataset_list,input$file1$name)
     }
-    return(data)
+    return(dataset_list)
   })
-  
+  get_data<- reactive({
+    data = read.csv(paste(data_dir,input$dataset,sep=""))
+    
+  })
   # Convert factor to numbers
   numerize_factors <- reactive({
     data = get_data()
@@ -54,12 +59,9 @@ shinyServer(function(input, output) {
   
   # Provide some information about the Correlation Matrix
   output$heatmaptitle <- renderText ({
-    if (is.null(input$file1))
-      msg = "Not file loaded. Showing Airquality dataset correlation matrix."
-    else{
       msg = paste(
         "Filename: ",
-        input$file1$name,
+        input$dataset,
         br(),
         "Matrix dimensions: ",
         ncol(get_corr_matrix()),
@@ -73,13 +75,18 @@ shinyServer(function(input, output) {
         msg = paste(msg,
                     br(),span(style="color:red",
                     "Warning: some factor variables were converted to numbers"))
-    }
     return(msg)
     
   })
   output$heatmap <- renderD3heatmap({
     corr_matrix <- get_corr_matrix()
-    d3heatmap(corr_matrix, anim_duration = 0)
+    d3heatmap(corr_matrix, anim_duration = 0,dendrogram= 'both')
   })
   
+  output$selectdataset <- renderUI({
+    selectInput("dataset", 
+                label = "Choose a dataset to use",
+                choices = datachoices(), selected = datachoices()[[length(datachoices())]]
+    )
+  })
 })
