@@ -3,7 +3,6 @@
 library(shiny)
 library(d3heatmap)
 library(caret)
-data("airquality")
 
 data_dir="data/"
 options(shiny.maxRequestSize = 60 * 1024 ^ 2)
