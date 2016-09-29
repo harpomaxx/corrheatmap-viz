@@ -46,6 +46,9 @@ shinyServer(function(input, output) {
   # Create Correlation Matrix
   get_corr_matrix <- reactive({
     data_filtered = get_data_filtered()
+    zero_mean_predictors=nearZeroVar(data_filtered)
+    if (length(zero_mean_predictors)>0)
+    data_filtered = data_filtered[,-zero_mean_predictors]
     corr_matrix <- cor(data_filtered,use = "na")
     data_lowcorr = data_filtered
     highcorr_predictors = findCorrelation(corr_matrix, cutoff = input$corrvalue /
