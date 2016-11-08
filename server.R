@@ -1,4 +1,4 @@
-# Given a CSV file, calculate the correlation matrix and plot it in a heatmap
+# Given a CSV file, calculate the correlation matrix and plot it on a heatmap
 
 library(shiny)
 library(d3heatmap)
@@ -7,6 +7,13 @@ library(caret)
 data_dir="data/"
 options(shiny.maxRequestSize = 60 * 1024 ^ 2)
 dataset_list=as.list(list.files(data_dir))
+
+zeroVar <- function(dat) {
+  out <- lapply(dat, function(x) length(unique(x)))
+  want <- which(!out > 1)
+  return(want)
+}
+
 shinyServer(function(input, output) {
 
   # Load a new CSV, save it locally and append it to dataset_list
@@ -20,14 +27,20 @@ shinyServer(function(input, output) {
   })
   get_data<- reactive({
     data = read.csv(paste(data_dir,input$dataset,sep=""))
-    
+    #remove zero variance predictors
+    zero_var_predictors=zeroVar(data)
+    if (length(zero_var_predictors)>0)
+      data <-data[,-zero_var_predictors]
+    return(data)
   })
   # Convert factor to numbers
   numerize_factors <- reactive({
     data = get_data()
+    data_names=colnames(data) #save data_colnames for later
     if (TRUE %in% sapply(data, is.factor)) {
       data = sapply(data, as.numeric)
     }
+    colnames(data) <- data_names
     return(data) 
   })
   
@@ -37,18 +50,15 @@ shinyServer(function(input, output) {
     data_filtered = numerize_factors() 
     if (input$regfilter != "")
       data_filtered = data_filtered[, grep(input$regfilter,
-                                           names(data_filtered),
+                                           colnames(data_filtered),
                                            invert = T,
                                            value = F)]
-    return(data_filtered)
+      return(data_filtered)
   })
   
   # Create Correlation Matrix
   get_corr_matrix <- reactive({
     data_filtered = get_data_filtered()
-    zero_mean_predictors=nearZeroVar(data_filtered)
-    if (length(zero_mean_predictors)>0)
-    data_filtered = data_filtered[,-zero_mean_predictors]
     corr_matrix <- cor(data_filtered,use = "na")
     data_lowcorr = data_filtered
     highcorr_predictors = findCorrelation(corr_matrix, cutoff = input$corrvalue /
@@ -76,7 +86,7 @@ shinyServer(function(input, output) {
       if (TRUE %in% sapply(data, is.factor))
         msg = paste(msg,
                     br(),span(style="color:red",
-                    "Warning: some factor variables were converted to numbers"))
+                    "Warning: some factor variables were found and converted to numbers"))
     return(msg)
     
   })
