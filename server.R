@@ -92,7 +92,7 @@ shinyServer(function(input, output) {
   })
   output$heatmap <- renderD3heatmap({
     corr_matrix <- get_corr_matrix()
-    d3heatmap(corr_matrix, anim_duration = 0,dendrogram= 'both')
+    d3heatmap(corr_matrix, anim_duration = 0,dendrogram= 'both',color="Reds")
   })
   
   output$selectdataset <- renderUI({
